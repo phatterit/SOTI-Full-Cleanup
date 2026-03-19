@@ -1,0 +1,95 @@
+# =============================================
+# SOTI Full Cleanup - Manual pdb.ini check
+# ASCII only - checks ALL common locations
+# =============================================
+
+# Safety
+If (Question("Are you sure you want to UNINSTALL SOTI and clean ALL remnants?", "SOTI Removal", "YesNo") = 0)
+    Exit
+EndIf
+
+Message("Stopping SOTI processes... Press ok", "Step 1/3")
+
+RunWait("\Windows\CommLoader.exe", "-exit")
+Sleep(800)
+
+If (ProcExists("CommLoader.exe"))
+    Kill("CommLoader.exe")
+EndIf
+If (ProcExists("MobiControl.exe"))
+    Kill("MobiControl.exe")
+EndIf
+If (ProcExists("PkCtrlSv.exe"))
+    Kill("PkCtrlSv.exe")
+EndIf
+
+RunWait("\Windows\unload.exe", "SOTI MobiControl Device Agent")
+
+Message("Uninstall done. Now cleaning ALL locations... Press ok", "Step 2/3")
+
+# === EXTENDED pdb and ini cleanup ===
+Call("DeleteIfExists", "\pdb.ini")
+Call("DeleteIfExists", "\Application\pdb.ini")
+Call("DeleteIfExists", "\Windows\pdb.ini")
+Call("DeleteIfExists", "\IPSM\pdb.ini")
+Call("DeleteIfExists", "\Flash\pdb.ini")
+Call("DeleteIfExists", "\NandFlash\pdb.ini")
+Call("DeleteIfExists", "\Storage\pdb.ini")
+
+# Hidden working files without extensions and backups
+Call("DeleteIfExists", "\Application\pdb")
+Call("DeleteIfExists", "\pdb")
+Call("DeleteIfExists", "\PdbInfo\BAK_IPSM_pdb.ini")
+Call("DeleteIfExists", "\IPSM\pdb.ini.bak")
+
+# === MCSetup, MCPortal and other tools ===
+Call("DeleteIfExists", "\Application\MCSetup")
+Call("DeleteIfExists", "\Application\MobiControl.ini")
+Call("DeleteIfExists", "\Application\MobiControl.txt")
+Call("DeleteIfExists", "\Application\MCRootBak.ini")
+Call("DeleteIfExists", "\Application\MCSetup.ini")
+Call("DeleteIfExists", "\IPSM\MCSetup.ini")
+Call("DeleteIfExists", "\Flash\MCSetup.ini")
+
+Call("DeleteIfExists", "\Application\mcportal")
+Call("DeleteIfExists", "\Application\mcportal.exe")
+Call("DelTreeIfExists", "\Application\mcportal")
+
+# === Folders ===
+Call("DelTreeIfExists", "\Application\PdbPkg")
+Call("DelTreeIfExists", "\PdbInfo")
+Call("DelTreeIfExists", "\SOTI")
+Call("DelTreeIfExists", "\IPSM\PdbPkg")
+Call("DelTreeIfExists", "\Flash\PdbPkg")
+
+# Other leftovers
+Call("DeleteIfExists", "\PkInst.log")
+Call("DeleteIfExists", "\PkCtrlSv.log")
+Call("DeleteIfExists", "\pkfsh.log")
+Call("DeleteIfExists", "\autorun.log")
+Call("DeleteIfExists", "\Windows\pkfsh.dll")
+Call("DeleteIfExists", "\Temp\devinit.pcg")
+
+# === PROMPT FOR MANUAL PDB.INI REMOVAL ONLY ===
+Message("Cleanup finished! WARNING: Go to the Application folder manually and delete the pdb.ini file if the system locked it.", "Step 3/3 - DONE")
+
+# =============================================
+# Helper functions
+# =============================================
+
+Sub DeleteIfExists
+    path = argv[1]
+    If (FileExists(path))
+        SetFileAttribute(path, "readonly", 0)
+        SetFileAttribute(path, "system", 0)
+        SetFileAttribute(path, "hidden", 0)
+        Delete(path)
+    EndIf
+EndSub
+
+Sub DelTreeIfExists
+    path = argv[1]
+    If (DirExists(path))
+        DelTree(path)
+    EndIf
+EndSub
